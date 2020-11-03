@@ -2175,22 +2175,17 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 {
     if (editingStyle == UITableViewCellEditingStyleDelete)
     {
-        [tableView beginUpdates];
-        
+        //[tableView beginUpdates];
         FXFormSection *section = [self sectionAtIndex:indexPath.section];
         [section removeFieldAtIndex:indexPath.row];
-        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
-        
-        // Reload the rows that follow. This is necessary to update the field references on the cells (otherwise the keys
-        // are invalid which can lead to a crash).
-        NSMutableArray *indexPaths = [NSMutableArray new];
-        for (NSInteger i = indexPath.row; i < [section.fields count]; ++i)
-        {
-            [indexPaths addObject:[NSIndexPath indexPathForRow:i + 1 inSection:indexPath.section]];
-        }
-        [tableView reloadRowsAtIndexPaths:indexPaths withRowAnimation:UITableViewRowAnimationAutomatic];
+        //[tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
 
-        [tableView endUpdates];
+        //[tableView endUpdates];
+        
+        // Reload the table. This is necessary to update the field references on the cells (otherwise the keys
+        // are invalid which can lead to a crash).
+        self.form = self.form;
+        [tableView reloadData];
     }
 }
 
@@ -2201,6 +2196,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 
     // Reload the table. This is necessary to update the field references on the cells (otherwise the keys
     // are invalid which can lead to a crash).
+    self.form = self.form;
     [tableView reloadData];
 }
 
