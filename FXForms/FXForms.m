@@ -1854,6 +1854,11 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
                                                  selector:@selector(keyboardDidShow:)
                                                      name:UIKeyboardDidShowNotification
                                                    object:nil];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(keyboardDidShow:)
+                                                     name:UIKeyboardWillChangeFrameNotification
+                                                   object:nil];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(keyboardWillHide:)
@@ -2390,6 +2395,10 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         keyboardFrame = [self.tableView.window convertRect:keyboardFrame toView:self.tableView.superview];
         CGFloat heightOfTableViewThatIsCoveredByKeyboard = self.tableView.frame.origin.y + self.tableView.frame.size.height - keyboardFrame.origin.y;
         CGFloat heightOfTableViewThatIsNotCoveredByKeyboard = self.tableView.frame.size.height - heightOfTableViewThatIsCoveredByKeyboard;
+
+        if (heightOfTableViewThatIsCoveredByKeyboard < 0) {
+            return;
+        }
         
         UIEdgeInsets tableContentInset = self.tableView.contentInset;
         self.originalTableContentInset = tableContentInset;
