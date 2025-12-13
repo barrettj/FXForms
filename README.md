@@ -629,7 +629,7 @@ For more control, you can use these field properties:
 ```objc
 - (NSDictionary *)emailField
 {
-    return @{FXFormFieldTitleKey: @"form.email.title"};
+    return @{FXFormFieldTitleLocalizationKey: @"form.email.title"};
 }
 ```
 
@@ -637,8 +637,8 @@ For more control, you can use these field properties:
 ```objc
 - (NSDictionary *)emailField
 {
-    return @{FXFormFieldHeaderKey: @"form.account.header",
-             FXFormFieldFooterKey: @"form.account.footer"};
+    return @{FXFormFieldHeaderLocalizationKey: @"form.account.header",
+             FXFormFieldFooterLocalizationKey: @"form.account.footer"};
 }
 ```
 
@@ -646,7 +646,7 @@ For more control, you can use these field properties:
 ```objc
 - (NSDictionary *)emailField
 {
-    return @{FXFormFieldPlaceholderKey: @"form.email.placeholder"};
+    return @{FXFormFieldPlaceholderLocalizationKey: @"form.email.placeholder"};
 }
 ```
 

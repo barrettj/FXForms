@@ -57,10 +57,10 @@ UIKIT_EXTERN NSString *const FXFormFieldSortable; //sortable
 UIKIT_EXTERN NSString *const FXFormFieldViewController; //viewController
 
 // Localization support
-UIKIT_EXTERN NSString *const FXFormFieldTitleKey; //titleKey - custom localization key for title
-UIKIT_EXTERN NSString *const FXFormFieldPlaceholderKey; //placeholderKey - custom localization key for placeholder
-UIKIT_EXTERN NSString *const FXFormFieldHeaderKey; //headerKey - custom localization key for header
-UIKIT_EXTERN NSString *const FXFormFieldFooterKey; //footerKey - custom localization key for footer
+UIKIT_EXTERN NSString *const FXFormFieldTitleLocalizationKey; //titleLocalizationKey - custom localization key for title
+UIKIT_EXTERN NSString *const FXFormFieldPlaceholderLocalizationKey; //placeholderLocalizationKey - custom localization key for placeholder
+UIKIT_EXTERN NSString *const FXFormFieldHeaderLocalizationKey; //headerLocalizationKey - custom localization key for header
+UIKIT_EXTERN NSString *const FXFormFieldFooterLocalizationKey; //footerLocalizationKey - custom localization key for footer
 UIKIT_EXTERN NSString *const FXFormFieldLocalizationTableName; //table - custom localization table name
 
 UIKIT_EXTERN NSString *const FXFormFieldTypeDefault; //default

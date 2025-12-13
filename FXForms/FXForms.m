@@ -66,10 +66,10 @@ NSString *const FXFormFieldSortable = @"sortable";
 NSString *const FXFormFieldViewController = @"viewController";
 
 // Localization support
-NSString *const FXFormFieldTitleKey = @"titleKey";
-NSString *const FXFormFieldPlaceholderKey = @"placeholderKey";
-NSString *const FXFormFieldHeaderKey = @"headerKey";
-NSString *const FXFormFieldFooterKey = @"footerKey";
+NSString *const FXFormFieldTitleLocalizationKey = @"titleLocalizationKey";
+NSString *const FXFormFieldPlaceholderLocalizationKey = @"placeholderLocalizationKey";
+NSString *const FXFormFieldHeaderLocalizationKey = @"headerLocalizationKey";
+NSString *const FXFormFieldFooterLocalizationKey = @"footerLocalizationKey";
 NSString *const FXFormFieldLocalizationTableName = @"table";
 
 NSString *const FXFormFieldTypeDefault = @"default";
@@ -555,7 +555,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 
     //convert header from string to class, and apply localization
     id header = dictionary[FXFormFieldHeader];
-    NSString *headerKey = dictionary[FXFormFieldHeaderKey];
+    NSString *headerKey = dictionary[FXFormFieldHeaderLocalizationKey];
     if (headerKey)
     {
         //use custom localization key for header
@@ -581,7 +581,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 
     //convert footer from string to class, and apply localization
     id footer = dictionary[FXFormFieldFooter];
-    NSString *footerKey = dictionary[FXFormFieldFooterKey];
+    NSString *footerKey = dictionary[FXFormFieldFooterLocalizationKey];
     if (footerKey)
     {
         //use custom localization key for footer
@@ -607,7 +607,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 
     //apply localization to placeholder
     id placeholder = dictionary[FXFormFieldPlaceholder];
-    NSString *placeholderKey = dictionary[FXFormFieldPlaceholderKey];
+    NSString *placeholderKey = dictionary[FXFormFieldPlaceholderLocalizationKey];
     if (placeholderKey)
     {
         //use custom localization key for placeholder
@@ -636,10 +636,10 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
     //   "Email Address" = "Adresse e-mail";  // French
     //   "Remember Me" = "Se souvenir de moi";  // French
     //
-    // You can also use FXFormFieldTitleKey to specify a custom localization key,
+    // You can also use FXFormFieldTitleLocalizationKey to specify a custom localization key,
     // and FXFormFieldLocalizationTableName to use a custom .strings file.
     //
-    NSString *titleKey = dictionary[FXFormFieldTitleKey];
+    NSString *titleKey = dictionary[FXFormFieldTitleLocalizationKey];
     if (titleKey)
     {
         //use custom localization key for title
