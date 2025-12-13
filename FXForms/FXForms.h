@@ -56,6 +56,13 @@ UIKIT_EXTERN NSString *const FXFormFieldInline; //inline
 UIKIT_EXTERN NSString *const FXFormFieldSortable; //sortable
 UIKIT_EXTERN NSString *const FXFormFieldViewController; //viewController
 
+// Localization support
+UIKIT_EXTERN NSString *const FXFormFieldTitleKey; //titleKey - custom localization key for title
+UIKIT_EXTERN NSString *const FXFormFieldPlaceholderKey; //placeholderKey - custom localization key for placeholder
+UIKIT_EXTERN NSString *const FXFormFieldHeaderKey; //headerKey - custom localization key for header
+UIKIT_EXTERN NSString *const FXFormFieldFooterKey; //footerKey - custom localization key for footer
+UIKIT_EXTERN NSString *const FXFormFieldLocalizationTableName; //table - custom localization table name
+
 UIKIT_EXTERN NSString *const FXFormFieldTypeDefault; //default
 UIKIT_EXTERN NSString *const FXFormFieldTypeLabel; //label
 UIKIT_EXTERN NSString *const FXFormFieldTypeText; //text
@@ -161,6 +168,16 @@ UIKIT_EXTERN NSString *const FXFormFieldTypeImage; //image
 - (void)registerViewControllerClass:(Class)controllerClass forFieldType:(NSString *)fieldType;
 - (void)registerViewControllerClass:(Class)controllerClass forFieldClass:(Class)fieldClass;
 
+// Localization helpers
+// Returns a string containing all localizable strings from the form in Localizable.strings format.
+// This is useful for generating translation templates.
+// Example output:
+//   /* Field title for 'emailAddress' property */
+//   "Email Address" = "Email Address";
+- (NSString *)generateLocalizableStrings;
+
+// Returns a set of all localizable string keys used by the form
+- (NSSet<NSString *> *)localizableStringKeys;
 
 @end
 
