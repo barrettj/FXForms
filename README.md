@@ -550,6 +550,137 @@ func fieldThatDoesntWorkField() -> NSDictionary {
 ```
 
 
+Localization
+--------------------
+
+FXForms provides comprehensive localization support for all user-facing strings. Here's how it works:
+
+### How Localization Keys are Generated
+
+FXForms automatically generates localization keys from your property names. The camelCase property name is converted to Title Case and used as both the display text and the localization key.
+
+For example:
+- Property `emailAddress` → Localization key `"Email Address"`
+- Property `rememberMe` → Localization key `"Remember Me"`
+- Property `firstName` → Localization key `"First Name"`
+
+### Creating Localization Files
+
+To localize your forms, add entries to your `Localizable.strings` file:
+
+```
+/* French translations */
+"Email Address" = "Adresse e-mail";
+"Remember Me" = "Se souvenir de moi";
+"First Name" = "Prénom";
+"Password" = "Mot de passe";
+```
+
+### Generating Localization Templates
+
+FXForms includes a helper method to generate a complete `Localizable.strings` template from your form:
+
+```objc
+// In your view controller, after setting up the form:
+NSString *stringsContent = [self.formController generateLocalizableStrings];
+NSLog(@"%@", stringsContent);
+```
+
+This outputs something like:
+
+```
+/* FXForms Localizable Strings */
+/* Generated automatically - copy this content to your Localizable.strings file */
+
+/* FXForms built-in strings */
+"Add Item" = "Add Item";
+"Take Photo" = "Take Photo";
+"Photo Library" = "Photo Library";
+"Cancel" = "Cancel";
+
+/* Field titles */
+/* Field: emailAddress */
+"Email Address" = "Email Address";
+/* Field: password */
+"Password" = "Password";
+/* Field: rememberMe */
+"Remember Me" = "Remember Me";
+
+/* Section headers */
+"Account Settings" = "Account Settings";
+```
+
+### Built-in Localizable Strings
+
+FXForms uses the following built-in strings that you may want to localize:
+
+| Key | Usage |
+|-----|-------|
+| `"Add Item"` | Button to add items to collection fields |
+| `"Take Photo"` | Camera option in image picker |
+| `"Photo Library"` | Photo library option in image picker |
+| `"Cancel"` | Cancel button in image picker |
+
+### Advanced Localization Options
+
+For more control, you can use these field properties:
+
+**Custom Localization Key for Title:**
+```objc
+- (NSDictionary *)emailField
+{
+    return @{FXFormFieldTitleLocalizationKey: @"form.email.title"};
+}
+```
+
+**Custom Localization Key for Header/Footer:**
+```objc
+- (NSDictionary *)emailField
+{
+    return @{FXFormFieldHeaderLocalizationKey: @"form.account.header",
+             FXFormFieldFooterLocalizationKey: @"form.account.footer"};
+}
+```
+
+**Custom Localization Key for Placeholder:**
+```objc
+- (NSDictionary *)emailField
+{
+    return @{FXFormFieldPlaceholderLocalizationKey: @"form.email.placeholder"};
+}
+```
+
+**Using a Custom Strings Table:**
+```objc
+- (NSDictionary *)emailField
+{
+    return @{FXFormFieldLocalizationTableName: @"Forms"};
+}
+```
+
+This will look up strings in `Forms.strings` instead of `Localizable.strings`.
+
+### Localizing Section Headers and Footers
+
+Section headers and footers are automatically localized using the same mechanism. Simply add entries for them in your strings file:
+
+```objc
+// In your form:
+- (NSArray *)fields
+{
+    return @[
+        @{FXFormFieldKey: @"email", FXFormFieldHeader: @"Account Settings"},
+        // ...
+    ];
+}
+```
+
+```
+/* In Localizable.strings */
+"Account Settings" = "Paramètres du compte";
+```
+
+
 Release notes
 --------------
 

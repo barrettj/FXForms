@@ -65,6 +65,13 @@ NSString *const FXFormFieldInline = @"inline";
 NSString *const FXFormFieldSortable = @"sortable";
 NSString *const FXFormFieldViewController = @"viewController";
 
+// Localization support
+NSString *const FXFormFieldTitleLocalizationKey = @"titleLocalizationKey";
+NSString *const FXFormFieldPlaceholderLocalizationKey = @"placeholderLocalizationKey";
+NSString *const FXFormFieldHeaderLocalizationKey = @"headerLocalizationKey";
+NSString *const FXFormFieldFooterLocalizationKey = @"footerLocalizationKey";
+NSString *const FXFormFieldLocalizationTableName = @"table";
+
 NSString *const FXFormFieldTypeDefault = @"default";
 NSString *const FXFormFieldTypeLabel = @"label";
 NSString *const FXFormFieldTypeText = @"text";
@@ -87,6 +94,18 @@ NSString *const FXFormFieldTypeImage = @"image";
 
 
 static NSString *const FXFormsException = @"FXFormsException";
+
+
+// Helper function for localization that supports custom table names
+static inline NSString *FXLocalizedString(NSString *key, NSString *tableName)
+{
+    if (!key) return nil;
+    if (tableName)
+    {
+        return [[NSBundle mainBundle] localizedStringForKey:key value:key table:tableName];
+    }
+    return [[NSBundle mainBundle] localizedStringForKey:key value:key table:nil];
+}
 
 
 static const CGFloat FXFormFieldLabelSpacing = 5;
@@ -137,35 +156,12 @@ static UIView *FXFormsFirstResponder(UIView *view)
 
 static inline CGFloat FXFormLabelMinFontSize(UILabel *label)
 {
-    
-#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_6_0
-    
-    if (![label respondsToSelector:@selector(setMinimumScaleFactor:)])
-    {
-        return label.minimumFontSize;
-    }
-    
-#endif
-    
     return label.font.pointSize * label.minimumScaleFactor;
 }
 
 static inline void FXFormLabelSetMinFontSize(UILabel *label, CGFloat fontSize)
 {
-    
-#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_6_0
-    
-    if (![label respondsToSelector:@selector(setMinimumScaleFactor:)])
-    {
-        label.minimumFontSize = fontSize;
-    }
-    else
-        
-#endif
-        
-    {
-        label.minimumScaleFactor = fontSize / label.font.pointSize;
-    }
+    label.minimumScaleFactor = fontSize / label.font.pointSize;
 }
 
 static inline NSArray *FXFormProperties(id<FXForm> form)
@@ -554,9 +550,18 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         dictionary[FXFormFieldViewController] = viewController = FXFormClassFromString(viewController);
     }
     
-    //convert header from string to class
+    //get localization table name (used for all localizable strings)
+    NSString *tableName = dictionary[FXFormFieldLocalizationTableName];
+
+    //convert header from string to class, and apply localization
     id header = dictionary[FXFormFieldHeader];
-    if ([header isKindOfClass:[NSString class]])
+    NSString *headerKey = dictionary[FXFormFieldHeaderLocalizationKey];
+    if (headerKey)
+    {
+        //use custom localization key for header
+        dictionary[FXFormFieldHeader] = FXLocalizedString(headerKey, tableName);
+    }
+    else if ([header isKindOfClass:[NSString class]])
     {
         Class viewClass = FXFormClassFromString(header);
         if ([viewClass isSubclassOfClass:[UIView class]])
@@ -565,7 +570,8 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         }
         else
         {
-            dictionary[FXFormFieldHeader] = [header copy];
+            //apply localization to header string
+            dictionary[FXFormFieldHeader] = FXLocalizedString(header, tableName);
         }
     }
     else if ([header isKindOfClass:[NSNull class]])
@@ -573,9 +579,15 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         dictionary[FXFormFieldHeader] = @"";
     }
 
-    //convert footer from string to class
+    //convert footer from string to class, and apply localization
     id footer = dictionary[FXFormFieldFooter];
-    if ([footer isKindOfClass:[NSString class]])
+    NSString *footerKey = dictionary[FXFormFieldFooterLocalizationKey];
+    if (footerKey)
+    {
+        //use custom localization key for footer
+        dictionary[FXFormFieldFooter] = FXLocalizedString(footerKey, tableName);
+    }
+    else if ([footer isKindOfClass:[NSString class]])
     {
         Class viewClass = FXFormClassFromString(footer);
         if ([viewClass isSubclassOfClass:[UIView class]])
@@ -584,12 +596,27 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         }
         else
         {
-            dictionary[FXFormFieldFooter] = [footer copy];
+            //apply localization to footer string
+            dictionary[FXFormFieldFooter] = FXLocalizedString(footer, tableName);
         }
     }
     else if ([footer isKindOfClass:[NSNull class]])
     {
         dictionary[FXFormFieldFooter] = @"";
+    }
+
+    //apply localization to placeholder
+    id placeholder = dictionary[FXFormFieldPlaceholder];
+    NSString *placeholderKey = dictionary[FXFormFieldPlaceholderLocalizationKey];
+    if (placeholderKey)
+    {
+        //use custom localization key for placeholder
+        dictionary[FXFormFieldPlaceholder] = FXLocalizedString(placeholderKey, tableName);
+    }
+    else if ([placeholder isKindOfClass:[NSString class]])
+    {
+        //apply localization to placeholder string
+        dictionary[FXFormFieldPlaceholder] = FXLocalizedString(placeholder, tableName);
     }
     
     //preprocess template dictionary
@@ -602,7 +629,23 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
     }
     
     //derive title from key or selector name
-    if (!dictionary[FXFormFieldTitle])
+    //
+    // LOCALIZATION: The auto-generated title is used as the localization key.
+    // For example, a property named "emailAddress" generates the key "Email Address".
+    // To localize, add entries to your Localizable.strings file:
+    //   "Email Address" = "Adresse e-mail";  // French
+    //   "Remember Me" = "Se souvenir de moi";  // French
+    //
+    // You can also use FXFormFieldTitleLocalizationKey to specify a custom localization key,
+    // and FXFormFieldLocalizationTableName to use a custom .strings file.
+    //
+    NSString *titleKey = dictionary[FXFormFieldTitleLocalizationKey];
+    if (titleKey)
+    {
+        //use custom localization key for title
+        dictionary[FXFormFieldTitle] = FXLocalizedString(titleKey, tableName);
+    }
+    else if (!dictionary[FXFormFieldTitle])
     {
         BOOL wasCapital = YES;
         NSString *keyOrAction = key;
@@ -625,7 +668,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         }
         if ([output length])
         {
-            dictionary[FXFormFieldTitle] = NSLocalizedString(output, nil);
+            dictionary[FXFormFieldTitle] = FXLocalizedString(output, tableName);
         }
     }
 }
@@ -2456,7 +2499,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         NSDictionary *keyboardInfo = [note userInfo];
         UIEdgeInsets tableScrollIndicatorInsets = self.tableView.scrollIndicatorInsets;
         tableScrollIndicatorInsets.bottom = 0;
-        
+
         //restore insets
         [UIView beginAnimations:nil context:nil];
         [UIView setAnimationCurve:(UIViewAnimationCurve)keyboardInfo[UIKeyboardAnimationCurveUserInfoKey]];
@@ -2466,6 +2509,166 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         self.originalTableContentInset = UIEdgeInsetsZero;
         [UIView commitAnimations];
     }
+}
+
+#pragma mark - Localization Helpers
+
+- (NSSet<NSString *> *)localizableStringKeys
+{
+    NSMutableSet *keys = [NSMutableSet set];
+
+    // Add FXForms built-in strings
+    [keys addObject:@"Add Item"];
+    [keys addObject:@"Take Photo"];
+    [keys addObject:@"Photo Library"];
+    [keys addObject:@"Cancel"];
+
+    // Enumerate all fields to collect their localizable strings
+    [self enumerateFieldsWithBlock:^(FXFormField *field, __unused NSIndexPath *indexPath) {
+        // Add field title
+        if (field.title.length > 0)
+        {
+            [keys addObject:field.title];
+        }
+
+        // Add placeholder if it's a string
+        if ([field.placeholder isKindOfClass:[NSString class]] && [field.placeholder length] > 0)
+        {
+            [keys addObject:field.placeholder];
+        }
+    }];
+
+    // Add section headers and footers
+    for (FXFormSection *section in self.sections)
+    {
+        if ([section.header isKindOfClass:[NSString class]] && [section.header length] > 0)
+        {
+            [keys addObject:section.header];
+        }
+        if ([section.footer isKindOfClass:[NSString class]] && [section.footer length] > 0)
+        {
+            [keys addObject:section.footer];
+        }
+    }
+
+    return [keys copy];
+}
+
+- (NSString *)generateLocalizableStrings
+{
+    NSMutableString *output = [NSMutableString string];
+
+    // Header comment
+    [output appendString:@"/* FXForms Localizable Strings */\n"];
+    [output appendString:@"/* Generated automatically - copy this content to your Localizable.strings file */\n\n"];
+
+    // FXForms built-in strings
+    [output appendString:@"/* FXForms built-in strings */\n"];
+    [output appendString:@"\"Add Item\" = \"Add Item\";\n"];
+    [output appendString:@"\"Take Photo\" = \"Take Photo\";\n"];
+    [output appendString:@"\"Photo Library\" = \"Photo Library\";\n"];
+    [output appendString:@"\"Cancel\" = \"Cancel\";\n\n"];
+
+    // Collect field titles with their property keys for better comments
+    NSMutableDictionary<NSString *, NSString *> *titleToKey = [NSMutableDictionary dictionary];
+    NSMutableSet<NSString *> *placeholders = [NSMutableSet set];
+    NSMutableSet<NSString *> *headers = [NSMutableSet set];
+    NSMutableSet<NSString *> *footers = [NSMutableSet set];
+
+    [self enumerateFieldsWithBlock:^(FXFormField *field, __unused NSIndexPath *indexPath) {
+        if (field.title.length > 0 && field.key.length > 0)
+        {
+            titleToKey[field.title] = field.key;
+        }
+        else if (field.title.length > 0)
+        {
+            titleToKey[field.title] = @"(action)";
+        }
+
+        if ([field.placeholder isKindOfClass:[NSString class]] && [field.placeholder length] > 0)
+        {
+            [placeholders addObject:field.placeholder];
+        }
+    }];
+
+    for (FXFormSection *section in self.sections)
+    {
+        if ([section.header isKindOfClass:[NSString class]] && [section.header length] > 0)
+        {
+            [headers addObject:section.header];
+        }
+        if ([section.footer isKindOfClass:[NSString class]] && [section.footer length] > 0)
+        {
+            [footers addObject:section.footer];
+        }
+    }
+
+    // Output field titles
+    if (titleToKey.count > 0)
+    {
+        [output appendString:@"/* Field titles */\n"];
+        NSArray *sortedTitles = [[titleToKey allKeys] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+        for (NSString *title in sortedTitles)
+        {
+            NSString *key = titleToKey[title];
+            NSString *escapedTitle = [self escapeStringForLocalization:title];
+            [output appendFormat:@"/* Field: %@ */\n", key];
+            [output appendFormat:@"\"%@\" = \"%@\";\n", escapedTitle, escapedTitle];
+        }
+        [output appendString:@"\n"];
+    }
+
+    // Output section headers
+    if (headers.count > 0)
+    {
+        [output appendString:@"/* Section headers */\n"];
+        NSArray *sortedHeaders = [[headers allObjects] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+        for (NSString *header in sortedHeaders)
+        {
+            NSString *escapedHeader = [self escapeStringForLocalization:header];
+            [output appendFormat:@"\"%@\" = \"%@\";\n", escapedHeader, escapedHeader];
+        }
+        [output appendString:@"\n"];
+    }
+
+    // Output section footers
+    if (footers.count > 0)
+    {
+        [output appendString:@"/* Section footers */\n"];
+        NSArray *sortedFooters = [[footers allObjects] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+        for (NSString *footer in sortedFooters)
+        {
+            NSString *escapedFooter = [self escapeStringForLocalization:footer];
+            [output appendFormat:@"\"%@\" = \"%@\";\n", escapedFooter, escapedFooter];
+        }
+        [output appendString:@"\n"];
+    }
+
+    // Output placeholders
+    if (placeholders.count > 0)
+    {
+        [output appendString:@"/* Placeholders */\n"];
+        NSArray *sortedPlaceholders = [[placeholders allObjects] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+        for (NSString *placeholder in sortedPlaceholders)
+        {
+            NSString *escapedPlaceholder = [self escapeStringForLocalization:placeholder];
+            [output appendFormat:@"\"%@\" = \"%@\";\n", escapedPlaceholder, escapedPlaceholder];
+        }
+    }
+
+    return output;
+}
+
+- (NSString *)escapeStringForLocalization:(NSString *)string
+{
+    // Escape special characters for .strings file format
+    NSMutableString *escaped = [string mutableCopy];
+    [escaped replaceOccurrencesOfString:@"\\" withString:@"\\\\" options:0 range:NSMakeRange(0, escaped.length)];
+    [escaped replaceOccurrencesOfString:@"\"" withString:@"\\\"" options:0 range:NSMakeRange(0, escaped.length)];
+    [escaped replaceOccurrencesOfString:@"\n" withString:@"\\n" options:0 range:NSMakeRange(0, escaped.length)];
+    [escaped replaceOccurrencesOfString:@"\r" withString:@"\\r" options:0 range:NSMakeRange(0, escaped.length)];
+    [escaped replaceOccurrencesOfString:@"\t" withString:@"\\t" options:0 range:NSMakeRange(0, escaped.length)];
+    return escaped;
 }
 
 @end
@@ -2861,7 +3064,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
     self.textField = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 200, 21)];
     self.textField.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleBottomMargin |UIViewAutoresizingFlexibleLeftMargin;
     self.textField.font = [UIFont systemFontOfSize:self.textLabel.font.pointSize];
-    self.textField.minimumFontSize = FXFormLabelMinFontSize(self.textLabel);
+    self.textField.adjustsFontSizeToFitWidth = YES;
     self.textField.textColor = [UIColor colorWithRed:0.275f green:0.376f blue:0.522f alpha:1.000f];
     self.textField.delegate = self;
     [self.contentView addSubview:self.textField];
@@ -3451,7 +3654,7 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
 @end
 
 
-@interface FXFormImagePickerCell () <UINavigationControllerDelegate, UIImagePickerControllerDelegate, UIActionSheetDelegate>
+@interface FXFormImagePickerCell () <UINavigationControllerDelegate, UIImagePickerControllerDelegate>
 
 @property (nonatomic, strong) UIImagePickerController *imagePickerController;
 @property (nonatomic, weak) UIViewController *controller;
@@ -3540,28 +3743,23 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
         self.imagePickerController.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
         [controller presentViewController:self.imagePickerController animated:YES completion:nil];
     }
-    else if ([UIAlertController class])
-    {
-        UIAlertControllerStyle style = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)? UIAlertControllerStyleAlert: UIAlertControllerStyleActionSheet;
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:style];
-        
-        [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Take Photo", nil) style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) {
-            [self actionSheet:nil didDismissWithButtonIndex:0];
-        }]];
-        
-        [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Photo Library", nil) style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) {
-            [self actionSheet:nil didDismissWithButtonIndex:1];
-        }]];
-        
-        [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Cancel", nil) style:UIAlertActionStyleCancel handler:NULL]];
-        
-        self.controller = controller;
-        [controller presentViewController:alert animated:YES completion:NULL];
-    }
     else
     {
+        UIAlertControllerStyle style = ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)? UIAlertControllerStyleAlert: UIAlertControllerStyleActionSheet;
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil message:nil preferredStyle:style];
+
+        [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Take Photo", nil) style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) {
+            [self presentImagePickerWithSourceType:UIImagePickerControllerSourceTypeCamera];
+        }]];
+
+        [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Photo Library", nil) style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *action) {
+            [self presentImagePickerWithSourceType:UIImagePickerControllerSourceTypePhotoLibrary];
+        }]];
+
+        [alert addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Cancel", nil) style:UIAlertActionStyleCancel handler:NULL]];
+
         self.controller = controller;
-        [[[UIActionSheet alloc] initWithTitle:nil delegate:self cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil otherButtonTitles:NSLocalizedString(@"Take Photo", nil), NSLocalizedString(@"Photo Library", nil), nil] showInView:controller.view];
+        [controller presentViewController:alert animated:YES completion:NULL];
     }
 }
 
@@ -3578,27 +3776,8 @@ static void FXFormPreprocessFieldDictionary(NSMutableDictionary *dictionary)
     [self update];
 }
 
-- (void)actionSheet:(__unused UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex
+- (void)presentImagePickerWithSourceType:(UIImagePickerControllerSourceType)sourceType
 {
-    UIImagePickerControllerSourceType sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
-    switch (buttonIndex)
-    {
-        case 0:
-        {
-            sourceType = UIImagePickerControllerSourceTypeCamera;
-            break;
-        }
-        case 1:
-        {
-            sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
-            break;
-        }
-        default:
-        {
-            self.controller = nil;
-            return;
-        }
-    }
     if ([UIImagePickerController isSourceTypeAvailable:sourceType])
     {
         self.imagePickerController.sourceType = sourceType;
